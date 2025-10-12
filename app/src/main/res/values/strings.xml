@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">EECS4443Lab3</string>
+    <string name="task_logger">Task Logger</string>
+    <string name="sharedprefs">SharedPrefs</string>
+    <string name="sqlite">SQLite</string>
+    <string name="storage_sqlite_sharedprefs">Storage: SQLite / SharedPrefs</string>
+    <string name="add_task">Add Task</string>
+    <string name="task_logger_add_edit_task">Task Logger — Add / Edit Task</string>
+    <string name="title_required">Title (required)</string>
+    <string name="deadline_tap_to_pick">Deadline (tap to pick)</string>
+    <string name="notes_optional">Notes (optional)</string>
+    <string name="save_task">Save Task</string>
+    <string name="title">Title</string>
+    <string name="deadline">Deadline</string>
+    <string name="task_details">Task Details</string>
+    <string name="status">Status</string>
+    <string name="notes">Notes</string>
 </resources>
