@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.EECS4443Lab3">
         <activity
+            android:name=".TaskDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddEditTaskActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
