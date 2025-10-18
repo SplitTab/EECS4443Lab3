@@ -20,14 +20,16 @@ import java.util.GregorianCalendar;
 /**
  * Add/Edit Task screen
  * ---------------------------------
- * Simple form that captures a task's Title (required), optional Deadline (via DatePicker),
- * and optional Notes. When saved, returns data to the caller via setResult(...).
+ * Simple form that captures a task's Title (required), optional Deadline (via
+ * DatePicker),
+ * and optional Notes. When saved, returns data to the caller via
+ * setResult(...).
  *
  * Layout: activity_add_edit_task.xml
- *   - inputTitle (TextInputEditText, required)
- *   - inputDeadline (TextInputEditText, opens DatePicker)
- *   - inputNotes (TextInputEditText, optional)
- *   - btnSave (MaterialButton)
+ * - inputTitle (TextInputEditText, required)
+ * - inputDeadline (TextInputEditText, opens DatePicker)
+ * - inputNotes (TextInputEditText, optional)
+ * - btnSave (MaterialButton)
  */
 public class AddEditTaskActivity extends AppCompatActivity {
 
@@ -51,7 +53,8 @@ public class AddEditTaskActivity extends AppCompatActivity {
         inputNotes = findViewById(R.id.inputNotes);
         btnSave = findViewById(R.id.btnSave);
 
-        // Open the date picker when either the deadline field or its container is tapped
+        // Open the date picker when either the deadline field or its container is
+        // tapped
         View deadlineContainer = findViewById(R.id.tilDeadline);
         View.OnClickListener openPicker = v -> showDatePicker();
         inputDeadline.setOnClickListener(openPicker);
@@ -106,8 +109,7 @@ public class AddEditTaskActivity extends AppCompatActivity {
                             .format(picked.getTime());
                     inputDeadline.setText(formatted);
                 },
-                y, m, d
-        );
+                y, m, d);
         dlg.show();
     }
 

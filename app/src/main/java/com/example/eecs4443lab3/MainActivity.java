@@ -53,7 +53,10 @@ public class MainActivity extends AppCompatActivity {
     public static final String EXTRA_STATUS = "extra_status";
 
     // Storage mode toggle
-    private enum Mode { SHARED_PREFS, SQLITE }
+    private enum Mode {
+        SHARED_PREFS, SQLITE
+    }
+
     private Mode currentMode = Mode.SQLITE; // default matches initial switch state
 
     // Views
@@ -71,16 +74,15 @@ public class MainActivity extends AppCompatActivity {
     private TaskDbHelper dbHelper;
 
     // Receive results from AddEditTaskActivity
-    private final ActivityResultLauncher<Intent> addEditLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+    private final ActivityResultLauncher<Intent> addEditLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Intent data = result.getData();
                     Task t = new Task(
                             data.getStringExtra(EXTRA_TITLE),
                             data.getStringExtra(EXTRA_DEADLINE),
                             data.getStringExtra(EXTRA_NOTES),
-                            data.getStringExtra(EXTRA_STATUS)
-                    );
+                            data.getStringExtra(EXTRA_STATUS));
                     tasks.add(t);
                     adapter.notifyItemInserted(tasks.size() - 1);
                     persist();
@@ -105,10 +107,14 @@ public class MainActivity extends AppCompatActivity {
         // RecyclerView setup
         adapter = new TaskAdapter(tasks, new TaskAdapter.OnTaskInteraction() {
             @Override
-            public void onClick(int position) { MainActivity.this.openDetails(position); }
+            public void onClick(int position) {
+                MainActivity.this.openDetails(position);
+            }
 
             @Override
-            public void onLongPress(int position) { MainActivity.this.showTaskOptions(position); }
+            public void onLongPress(int position) {
+                MainActivity.this.showTaskOptions(position);
+            }
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
@@ -138,7 +144,9 @@ public class MainActivity extends AppCompatActivity {
         reloadFromStorage();
     }
 
-    /* -------------------------------- UI actions -------------------------------- */
+    /*
+     * -------------------------------- UI actions --------------------------------
+     */
 
     private void openDetails(int position) {
         Task t = tasks.get(position);
@@ -151,15 +159,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showTaskOptions(int position) {
-        CharSequence[] items = {"Edit", "Delete", "Cancel"};
+        CharSequence[] items = { "Edit", "Delete", "Cancel" };
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle(tasks.get(position).title)
                 .setItems(items, (dialog, which) -> {
-                    if (which == 0) {           // Edit
+                    if (which == 0) { // Edit
                         editTaskDialog(position);
-                    } else if (which == 1) {    // Delete
+                    } else if (which == 1) { // Delete
                         confirmDelete(position);
-                    } else {                    // Cancel
+                    } else { // Cancel
                         dialog.dismiss();
                     }
                 })
@@ -233,7 +241,9 @@ public class MainActivity extends AppCompatActivity {
         return e.getText() == null ? "" : e.getText().toString().trim();
     }
 
-    /* ------------------------------ Data loading ------------------------------- */
+    /*
+     * ------------------------------ Data loading -------------------------------
+     */
     private void reloadFromStorage() {
         tasks.clear();
         if (currentMode == Mode.SHARED_PREFS) {
@@ -252,7 +262,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /* ---------------------- SharedPreferences (JSON array) ---------------------- */
+    /*
+     * ---------------------- SharedPreferences (JSON array) ----------------------
+     */
     private void loadFromPrefs() {
         SharedPreferences sp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String json = sp.getString(PREFS_KEY, "[]");
@@ -264,8 +276,7 @@ public class MainActivity extends AppCompatActivity {
                         o.optString("title"),
                         o.optString("deadline"),
                         o.optString("notes"),
-                        o.optString("status", "Pending")
-                ));
+                        o.optString("status", "Pending")));
             }
         } catch (Exception ignored) {
         }
@@ -288,21 +299,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /* -------------------------------- SQLite ----------------------------------- */
+    /*
+     * -------------------------------- SQLite -----------------------------------
+     */
     private void loadFromDb() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         tasks.clear();
         try (Cursor c = db.rawQuery(
                 "SELECT title, deadline, notes, status FROM tasks ORDER BY _id DESC",
-                null
-        )) {
+                null)) {
             while (c.moveToNext()) {
                 tasks.add(new Task(
                         c.getString(0),
                         c.getString(1),
                         c.getString(2),
-                        c.getString(3)
-                ));
+                        c.getString(3)));
             }
         }
     }
@@ -314,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
             db.delete("tasks", null, null);
             for (Task t : tasks) {
                 db.execSQL("INSERT INTO tasks(title, deadline, notes, status) VALUES(?,?,?,?)",
-                        new Object[]{t.title, t.deadline, t.notes, t.status});
+                        new Object[] { t.title, t.deadline, t.notes, t.status });
             }
             db.setTransactionSuccessful();
         } finally {
@@ -322,7 +333,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /* --------------------------- Data & UI helpers ----------------------------- */
+    /*
+     * --------------------------- Data & UI helpers -----------------------------
+     */
     public static class Task implements Serializable {
         public String title;
         public String deadline;
@@ -363,6 +376,7 @@ public class MainActivity extends AppCompatActivity {
     private static class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskVH> {
         interface OnTaskInteraction {
             void onClick(int position);
+
             void onLongPress(int position);
         }
 
@@ -399,10 +413,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public int getItemCount() { return data.size(); }
+        public int getItemCount() {
+            return data.size();
+        }
 
         static class TaskVH extends RecyclerView.ViewHolder {
-            TaskVH(@NonNull View itemView) { super(itemView); }
+            TaskVH(@NonNull View itemView) {
+                super(itemView);
+            }
         }
     }
 }
