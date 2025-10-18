@@ -1,13 +1,16 @@
 package com.example.eecs4443lab3;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -19,52 +22,55 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.button.MaterialButton;
-
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Main screen: Task list with dual persistence options
+ * ---------------------------------------------------
+ * - Displays a list of tasks
+ * - Tap: opens read-only detail screen
+ * - Long-press: edit or delete dialog
+ * - FloatingActionButton: add new task (via AddEditTaskActivity)
+ * - MaterialSwitch: toggle between SharedPreferences and SQLite storage
+ */
 public class MainActivity extends AppCompatActivity {
 
-    // Intent result keys
+    // Intent keys used between activities
     public static final String EXTRA_TITLE = "extra_title";
     public static final String EXTRA_DEADLINE = "extra_deadline";
     public static final String EXTRA_NOTES = "extra_notes";
     public static final String EXTRA_STATUS = "extra_status";
 
-    // Storage mode
+    // Storage mode toggle
     private enum Mode { SHARED_PREFS, SQLITE }
-    private Mode currentMode = Mode.SQLITE; // default (matches your switch text)
+    private Mode currentMode = Mode.SQLITE; // default matches initial switch state
 
-    // Views (from activity_main.xml)  :contentReference[oaicite:4]{index=4}
+    // Views
     private RecyclerView recyclerView;
     private MaterialSwitch switchMode;
     private FloatingActionButton fab;
 
-    // Data
+    // Adapter + backing data
     private final List<Task> tasks = new ArrayList<>();
     private TaskAdapter adapter;
 
-    // Persistence
+    // Persistence helpers
     private static final String PREFS_NAME = "tasks_prefs";
     private static final String PREFS_KEY = "tasks_json";
     private TaskDbHelper dbHelper;
 
-    // Add/Edit launcher
+    // Receive results from AddEditTaskActivity
     private final ActivityResultLauncher<Intent> addEditLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
@@ -85,110 +91,33 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // activity_main.xml contains: toolbar, switchMode, recycler, fabAdd  :contentReference[oaicite:5]{index=5}
         setContentView(R.layout.activity_main);
 
+        // Toolbar
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // View bindings
         recyclerView = findViewById(R.id.recycler);
         switchMode = findViewById(R.id.switchMode);
         fab = findViewById(R.id.fabAdd);
 
+        // RecyclerView setup
         adapter = new TaskAdapter(tasks, new TaskAdapter.OnTaskInteraction() {
             @Override
-            public void onClick(int position) {
-                Task t = tasks.get(position);
-                // Open detail screen  (activity_task_detail.xml)  :contentReference[oaicite:6]{index=6}
-                Intent i = new Intent(MainActivity.this, TaskDetailActivity.class);
-                i.putExtra(EXTRA_TITLE, t.title);
-                i.putExtra(EXTRA_DEADLINE, t.deadline);
-                i.putExtra(EXTRA_NOTES, t.notes);
-                i.putExtra(EXTRA_STATUS, t.status);
-                startActivity(i);
-            }
+            public void onClick(int position) { MainActivity.this.openDetails(position); }
 
             @Override
-            public void onLongPress(int position) {
-                showTaskOptions(position); // ← NEW
-            }
-
-            private void showTaskOptions(int position) {
-                CharSequence[] items = {"Edit", "Delete", "Cancel"};
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle(tasks.get(position).title)
-                        .setItems(items, (dialog, which) -> {
-                            if (which == 0) {           // Edit
-                                editTaskDialog(position);
-                            } else if (which == 1) {    // Delete
-                                confirmDelete(position);
-                            } else {                    // Cancel
-                                dialog.dismiss();
-                            }
-                        })
-                        .show();
-            }
-            private void editTaskDialog(int position) {
-                Task t = tasks.get(position);
-
-                // Reuse the add/edit layout as a dialog
-                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.activity_add_edit_task, null, false);
-
-                TextView txtBanner = view.findViewById(R.id.txtBanner);
-                TextInputEditText inputTitle = view.findViewById(R.id.inputTitle);
-                TextInputEditText inputDeadline = view.findViewById(R.id.inputDeadline);
-                TextInputEditText inputNotes = view.findViewById(R.id.inputNotes);
-                MaterialButton btnSave = view.findViewById(R.id.btnSave);
-
-                // Prefill + tweak labels
-                txtBanner.setText("Edit Task");
-                btnSave.setText("Update Task");
-                inputTitle.setText(t.title);
-                inputDeadline.setText(t.deadline);
-                inputNotes.setText(t.notes);
-
-                AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                        .setView(view)
-                        .create();
-
-                btnSave.setOnClickListener(v -> {
-                    String newTitle = inputTitle.getText() == null ? "" : inputTitle.getText().toString().trim();
-                    String newDeadline = inputDeadline.getText() == null ? "" : inputDeadline.getText().toString().trim();
-                    String newNotes = inputNotes.getText() == null ? "" : inputNotes.getText().toString().trim();
-
-                    if (newTitle.isEmpty()) {
-                        inputTitle.setError("Title is required");
-                        return;
-                    }
-
-                    // Update in-memory model
-                    t.title = newTitle;
-                    t.deadline = newDeadline;
-                    t.notes = newNotes;
-                    // status stays as-is (t.status)
-
-                    // Refresh UI + persist to current storage (Prefs/SQLite)
-                    adapter.notifyItemChanged(position);
-                    persist();
-
-                    Snackbar.make(recyclerView, "Task updated", Snackbar.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                });
-
-                dialog.show();
-            }
-
-
-
+            public void onLongPress(int position) { MainActivity.this.showTaskOptions(position); }
         });
-
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
 
+        // DB helper
         dbHelper = new TaskDbHelper(this);
 
-        // Switch toggles runtime storage (SharedPreferences <-> SQLite) per lab spec  :contentReference[oaicite:7]{index=7}
+        // Switch toggles runtime storage (SharedPreferences <-> SQLite)
         switchMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
             currentMode = isChecked ? Mode.SHARED_PREFS : Mode.SQLITE;
             Snackbar.make(buttonView,
@@ -197,16 +126,44 @@ public class MainActivity extends AppCompatActivity {
             reloadFromStorage();
         });
 
+        // Add new task
         fab.setOnClickListener(v -> {
-            // Open add/edit form  (activity_add_edit_task.xml)  :contentReference[oaicite:8]{index=8}
             Intent i = new Intent(this, AddEditTaskActivity.class);
             addEditLauncher.launch(i);
         });
 
-        // Default to SQLite unless user toggles
+        // Initial load (defaults to SQLite)
         currentMode = Mode.SQLITE;
         switchMode.setChecked(false);
         reloadFromStorage();
+    }
+
+    /* -------------------------------- UI actions -------------------------------- */
+
+    private void openDetails(int position) {
+        Task t = tasks.get(position);
+        Intent i = new Intent(MainActivity.this, TaskDetailActivity.class);
+        i.putExtra(EXTRA_TITLE, t.title);
+        i.putExtra(EXTRA_DEADLINE, t.deadline);
+        i.putExtra(EXTRA_NOTES, t.notes);
+        i.putExtra(EXTRA_STATUS, t.status);
+        startActivity(i);
+    }
+
+    private void showTaskOptions(int position) {
+        CharSequence[] items = {"Edit", "Delete", "Cancel"};
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle(tasks.get(position).title)
+                .setItems(items, (dialog, which) -> {
+                    if (which == 0) {           // Edit
+                        editTaskDialog(position);
+                    } else if (which == 1) {    // Delete
+                        confirmDelete(position);
+                    } else {                    // Cancel
+                        dialog.dismiss();
+                    }
+                })
+                .show();
     }
 
     private void confirmDelete(int position) {
@@ -222,6 +179,61 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    private void editTaskDialog(int position) {
+        Task t = tasks.get(position);
+
+        // Reuse the Add/Edit layout inside a dialog
+        View view = LayoutInflater.from(MainActivity.this)
+                .inflate(R.layout.activity_add_edit_task, null, false);
+
+        TextView txtBanner = view.findViewById(R.id.txtBanner);
+        TextInputEditText inputTitle = view.findViewById(R.id.inputTitle);
+        TextInputEditText inputDeadline = view.findViewById(R.id.inputDeadline);
+        TextInputEditText inputNotes = view.findViewById(R.id.inputNotes);
+        MaterialButton btnSave = view.findViewById(R.id.btnSave);
+
+        // Prefill + tweak labels
+        txtBanner.setText("Edit Task");
+        btnSave.setText("Update Task");
+        inputTitle.setText(t.title);
+        inputDeadline.setText(t.deadline);
+        inputNotes.setText(t.notes);
+
+        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                .setView(view)
+                .create();
+
+        btnSave.setOnClickListener(v -> {
+            String newTitle = textOrEmpty(inputTitle);
+            String newDeadline = textOrEmpty(inputDeadline);
+            String newNotes = textOrEmpty(inputNotes);
+
+            if (newTitle.isEmpty()) {
+                inputTitle.setError("Title is required");
+                return;
+            }
+
+            // Update in-memory model
+            t.title = newTitle;
+            t.deadline = newDeadline;
+            t.notes = newNotes;
+
+            // Refresh UI + persist to current storage (Prefs/SQLite)
+            adapter.notifyItemChanged(position);
+            persist();
+
+            Snackbar.make(recyclerView, "Task updated", Snackbar.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private static String textOrEmpty(TextInputEditText e) {
+        return e.getText() == null ? "" : e.getText().toString().trim();
+    }
+
+    /* ------------------------------ Data loading ------------------------------- */
     private void reloadFromStorage() {
         tasks.clear();
         if (currentMode == Mode.SHARED_PREFS) {
@@ -255,7 +267,8 @@ public class MainActivity extends AppCompatActivity {
                         o.optString("status", "Pending")
                 ));
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     private void saveToPrefs() {
@@ -271,14 +284,18 @@ public class MainActivity extends AppCompatActivity {
             }
             getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                     .edit().putString(PREFS_KEY, arr.toString()).apply();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
-    /* ---------------------- SQLite ---------------------- */
+    /* -------------------------------- SQLite ----------------------------------- */
     private void loadFromDb() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         tasks.clear();
-        try (Cursor c = db.rawQuery("SELECT title, deadline, notes, status FROM tasks ORDER BY _id DESC", null)) {
+        try (Cursor c = db.rawQuery(
+                "SELECT title, deadline, notes, status FROM tasks ORDER BY _id DESC",
+                null
+        )) {
             while (c.moveToNext()) {
                 tasks.add(new Task(
                         c.getString(0),
@@ -305,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /* ---------------------- Data & UI helpers ---------------------- */
+    /* --------------------------- Data & UI helpers ----------------------------- */
     public static class Task implements Serializable {
         public String title;
         public String deadline;
@@ -342,6 +359,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** RecyclerView adapter for the simple two-line list items. */
     private static class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskVH> {
         interface OnTaskInteraction {
             void onClick(int position);
@@ -370,8 +388,8 @@ public class MainActivity extends AppCompatActivity {
             TextView line1 = h.itemView.findViewById(android.R.id.text1);
             TextView line2 = h.itemView.findViewById(android.R.id.text2);
             line1.setText(t.title);
-            line2.setText((t.deadline == null || t.deadline.isEmpty() ? "No deadline" : t.deadline) +
-                    " • " + t.status);
+            line2.setText((t.deadline == null || t.deadline.isEmpty() ? "No deadline" : t.deadline)
+                    + " • " + t.status);
 
             h.itemView.setOnClickListener(v -> listener.onClick(h.getBindingAdapterPosition()));
             h.itemView.setOnLongClickListener(v -> {

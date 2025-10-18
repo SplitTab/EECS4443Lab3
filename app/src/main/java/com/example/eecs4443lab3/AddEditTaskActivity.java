@@ -17,46 +17,53 @@ import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import com.google.android.material.appbar.MaterialToolbar;
-
 /**
- * Add/Edit screen with validation and a DatePicker.
- * Uses activity_add_edit_task.xml with:
- *  - inputTitle (required)
- *  - inputDeadline (tap opens DatePicker)
- *  - inputNotes (optional)
- *  - btnSave
- *  Matches Lab 3 "Task Logger" form requirements.  :contentReference[oaicite:9]{index=9} :contentReference[oaicite:10]{index=10}
+ * Add/Edit Task screen
+ * ---------------------------------
+ * Simple form that captures a task's Title (required), optional Deadline (via DatePicker),
+ * and optional Notes. When saved, returns data to the caller via setResult(...).
+ *
+ * Layout: activity_add_edit_task.xml
+ *   - inputTitle (TextInputEditText, required)
+ *   - inputDeadline (TextInputEditText, opens DatePicker)
+ *   - inputNotes (TextInputEditText, optional)
+ *   - btnSave (MaterialButton)
  */
 public class AddEditTaskActivity extends AppCompatActivity {
 
-    private TextInputEditText inputTitle, inputDeadline, inputNotes;
+    // UI references
+    private TextInputEditText inputTitle;
+    private TextInputEditText inputDeadline;
+    private TextInputEditText inputNotes;
     private MaterialButton btnSave;
 
+    // Holds the currently picked date for the deadline
     private final Calendar picked = new GregorianCalendar();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Layout: banner, TextInputLayouts, and Save button  :contentReference[oaicite:11]{index=11}
         setContentView(R.layout.activity_add_edit_task);
 
+        // Find views
         inputTitle = findViewById(R.id.inputTitle);
         inputDeadline = findViewById(R.id.inputDeadline);
         inputNotes = findViewById(R.id.inputNotes);
         btnSave = findViewById(R.id.btnSave);
 
+        // Open the date picker when either the deadline field or its container is tapped
         View deadlineContainer = findViewById(R.id.tilDeadline);
         View.OnClickListener openPicker = v -> showDatePicker();
         inputDeadline.setOnClickListener(openPicker);
         deadlineContainer.setOnClickListener(openPicker);
 
+        // Save button: validate and return data to caller
         btnSave.setOnClickListener(v -> {
             String title = safeText(inputTitle);
             String deadline = safeText(inputDeadline);
             String notes = safeText(inputNotes);
 
-            // Basic validation per lab (required title)  :contentReference[oaicite:12]{index=12}
+            // Require title
             if (TextUtils.isEmpty(title)) {
                 Snackbar.make(v, "Title is required", Snackbar.LENGTH_LONG).show();
                 inputTitle.requestFocus();
@@ -72,16 +79,18 @@ public class AddEditTaskActivity extends AppCompatActivity {
             finish();
         });
 
+        // Top app bar with back arrow
         MaterialToolbar toolbar = findViewById(R.id.detailToolbar);
         setSupportActionBar(toolbar);
-
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
         toolbar.setNavigationOnClickListener(v -> finish());
     }
 
+    /**
+     * Shows a DatePickerDialog and writes the selected date to the deadline field.
+     */
     private void showDatePicker() {
         int y = picked.get(Calendar.YEAR);
         int m = picked.get(Calendar.MONTH);
@@ -93,7 +102,8 @@ public class AddEditTaskActivity extends AppCompatActivity {
                     picked.set(Calendar.YEAR, year);
                     picked.set(Calendar.MONTH, month);
                     picked.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                    String formatted = DateFormat.getDateInstance(DateFormat.MEDIUM).format(picked.getTime());
+                    String formatted = DateFormat.getDateInstance(DateFormat.MEDIUM)
+                            .format(picked.getTime());
                     inputDeadline.setText(formatted);
                 },
                 y, m, d
@@ -101,8 +111,9 @@ public class AddEditTaskActivity extends AppCompatActivity {
         dlg.show();
     }
 
-
-
+    /**
+     * Convenience: null-safe trimmed text from a TextInputEditText.
+     */
     private static String safeText(TextInputEditText e) {
         return e.getText() == null ? "" : e.getText().toString().trim();
     }

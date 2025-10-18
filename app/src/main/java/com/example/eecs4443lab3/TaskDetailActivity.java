@@ -2,57 +2,61 @@ package com.example.eecs4443lab3;
 
 import android.os.Bundle;
 import android.widget.TextView;
-import com.google.android.material.appbar.MaterialToolbar;
-
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.appbar.MaterialToolbar;
+
 /**
- * Simple read-only details screen with labels:
- *  - txtTitle, txtDeadline, txtStatus, txtNotes
- * Uses activity_task_detail.xml.  :contentReference[oaicite:13]{index=13}
- * Opened via tap gesture per Lab 3.  :contentReference[oaicite:14]{index=14}
+ * Task Detail screen (read-only)
+ * ---------------------------------
+ * Displays a task's Title, Deadline, Status, and Notes passed via Intent extras
+ * from the caller. Empty values are rendered as an em dash (—).
  */
 public class TaskDetailActivity extends AppCompatActivity {
 
-    private TextView txtTitle, txtDeadline, txtStatus, txtNotes;
+    private TextView txtTitle;
+    private TextView txtDeadline;
+    private TextView txtStatus;
+    private TextView txtNotes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_detail);
 
+        // View bindings
         txtTitle = findViewById(R.id.txtTitle);
         txtDeadline = findViewById(R.id.txtDeadline);
         txtStatus = findViewById(R.id.txtStatus);
         txtNotes = findViewById(R.id.txtNotes);
 
+        // Pull values from intent
         String title = getIntent().getStringExtra(MainActivity.EXTRA_TITLE);
         String deadline = getIntent().getStringExtra(MainActivity.EXTRA_DEADLINE);
         String status = getIntent().getStringExtra(MainActivity.EXTRA_STATUS);
         String notes = getIntent().getStringExtra(MainActivity.EXTRA_NOTES);
 
+        // Populate UI (fallback to em dash for empty)
         txtTitle.setText(nullToDash(title));
-        txtDeadline.setText(nullOrEmpty(deadline) ? "—" : deadline);
+        txtDeadline.setText(isNullOrEmpty(deadline) ? "—" : deadline);
         txtStatus.setText(nullToDash(status));
-        txtNotes.setText(nullOrEmpty(notes) ? "—" : notes);
+        txtNotes.setText(isNullOrEmpty(notes) ? "—" : notes);
 
-
+        // Top app bar + back arrow
         MaterialToolbar toolbar = findViewById(R.id.detailToolbar);
         setSupportActionBar(toolbar);
-
-        // enable back arrow
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
-        // handle back navigation
         toolbar.setNavigationOnClickListener(v -> finish());
-
     }
 
-    private static boolean nullOrEmpty(String s) {
+    private static boolean isNullOrEmpty(String s) {
         return s == null || s.trim().isEmpty();
     }
-    private static String nullToDash(String s) { return nullOrEmpty(s) ? "—" : s; }
+
+    private static String nullToDash(String s) {
+        return isNullOrEmpty(s) ? "—" : s;
+    }
 }
