@@ -17,13 +17,15 @@
         <TextView
             android:id="@+id/txtBanner"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:text="@string/task_logger_add_edit_task"
             android:textStyle="bold"
             android:textSize="18sp"
+            android:gravity="center_horizontal"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
 
         <!-- Title (required) -->
         <com.google.android.material.textfield.TextInputLayout
