@@ -22,6 +22,9 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.button.MaterialButton;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -107,8 +110,76 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onLongPress(int position) {
-                confirmDelete(position);
+                showTaskOptions(position); // ← NEW
             }
+
+            private void showTaskOptions(int position) {
+                CharSequence[] items = {"Edit", "Delete", "Cancel"};
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(tasks.get(position).title)
+                        .setItems(items, (dialog, which) -> {
+                            if (which == 0) {           // Edit
+                                editTaskDialog(position);
+                            } else if (which == 1) {    // Delete
+                                confirmDelete(position);
+                            } else {                    // Cancel
+                                dialog.dismiss();
+                            }
+                        })
+                        .show();
+            }
+            private void editTaskDialog(int position) {
+                Task t = tasks.get(position);
+
+                // Reuse the add/edit layout as a dialog
+                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.activity_add_edit_task, null, false);
+
+                TextView txtBanner = view.findViewById(R.id.txtBanner);
+                TextInputEditText inputTitle = view.findViewById(R.id.inputTitle);
+                TextInputEditText inputDeadline = view.findViewById(R.id.inputDeadline);
+                TextInputEditText inputNotes = view.findViewById(R.id.inputNotes);
+                MaterialButton btnSave = view.findViewById(R.id.btnSave);
+
+                // Prefill + tweak labels
+                txtBanner.setText("Edit Task");
+                btnSave.setText("Update Task");
+                inputTitle.setText(t.title);
+                inputDeadline.setText(t.deadline);
+                inputNotes.setText(t.notes);
+
+                AlertDialog dialog = new AlertDialog.Builder(this)
+                        .setView(view)
+                        .create();
+
+                btnSave.setOnClickListener(v -> {
+                    String newTitle = inputTitle.getText() == null ? "" : inputTitle.getText().toString().trim();
+                    String newDeadline = inputDeadline.getText() == null ? "" : inputDeadline.getText().toString().trim();
+                    String newNotes = inputNotes.getText() == null ? "" : inputNotes.getText().toString().trim();
+
+                    if (newTitle.isEmpty()) {
+                        inputTitle.setError("Title is required");
+                        return;
+                    }
+
+                    // Update in-memory model
+                    t.title = newTitle;
+                    t.deadline = newDeadline;
+                    t.notes = newNotes;
+                    // status stays as-is (t.status)
+
+                    // Refresh UI + persist to current storage (Prefs/SQLite)
+                    adapter.notifyItemChanged(position);
+                    persist();
+
+                    Snackbar.make(recyclerView, "Task updated", Snackbar.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                });
+
+                dialog.show();
+            }
+
+
+
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
