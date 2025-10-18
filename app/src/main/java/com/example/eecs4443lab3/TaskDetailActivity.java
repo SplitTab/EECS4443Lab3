@@ -2,6 +2,8 @@ package com.example.eecs4443lab3;
 
 import android.os.Bundle;
 import android.widget.TextView;
+import com.google.android.material.appbar.MaterialToolbar;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -34,6 +36,19 @@ public class TaskDetailActivity extends AppCompatActivity {
         txtDeadline.setText(nullOrEmpty(deadline) ? "—" : deadline);
         txtStatus.setText(nullToDash(status));
         txtNotes.setText(nullOrEmpty(notes) ? "—" : notes);
+
+
+        MaterialToolbar toolbar = findViewById(R.id.detailToolbar);
+        setSupportActionBar(toolbar);
+
+        // enable back arrow
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        // handle back navigation
+        toolbar.setNavigationOnClickListener(v -> finish());
+
     }
 
     private static boolean nullOrEmpty(String s) {
