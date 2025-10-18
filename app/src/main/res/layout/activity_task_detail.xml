@@ -13,14 +13,15 @@
         android:id="@+id/detailToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:title="@string/task_details"
-        app:titleCentered="true"
         android:background="?attr/colorPrimary"
-        app:titleTextColor="@android:color/white"
-        app:navigationIconTint="@android:color/white"
-        app:layout_constraintTop_toTopOf="parent"
+        android:title="@string/task_details"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIconTint="@android:color/white"
+        app:titleCentered="true"
+        app:titleTextColor="@android:color/white" />
 
     <TextView
         android:id="@+id/lblTitle"
