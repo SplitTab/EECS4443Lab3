@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
                 inputDeadline.setText(t.deadline);
                 inputNotes.setText(t.notes);
 
-                AlertDialog dialog = new AlertDialog.Builder(this)
+                AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
                         .setView(view)
                         .create();
 

@@ -8,6 +8,7 @@ import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
@@ -15,6 +16,8 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import com.google.android.material.appbar.MaterialToolbar;
 
 /**
  * Add/Edit screen with validation and a DatePicker.
@@ -88,6 +91,8 @@ public class AddEditTaskActivity extends AppCompatActivity {
         );
         dlg.show();
     }
+
+
 
     private static String safeText(TextInputEditText e) {
         return e.getText() == null ? "" : e.getText().toString().trim();
