@@ -13,6 +13,18 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/detailToolbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:navigationIconTint="@android:color/black"
+            app:titleCentered="true"
+            app:titleTextColor="@android:color/white" />
+
         <!-- Banner -->
         <TextView
             android:id="@+id/txtBanner"

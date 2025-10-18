@@ -71,6 +71,15 @@ public class AddEditTaskActivity extends AppCompatActivity {
             setResult(RESULT_OK, data);
             finish();
         });
+
+        MaterialToolbar toolbar = findViewById(R.id.detailToolbar);
+        setSupportActionBar(toolbar);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        toolbar.setNavigationOnClickListener(v -> finish());
     }
 
     private void showDatePicker() {
